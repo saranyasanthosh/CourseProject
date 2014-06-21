@@ -1,0 +1,94 @@
+---
+title: Assignment Write up - "Human activity prediction - Under 5 levels(A,B,C,D,E)"
+output: html_document
+---
+
+The aim of this work is to fit a Model, which captures the way the persons are doing weight lifting exercise. The developed Model has to predict the class category (A, B, C, D, or E) of the person, provided the various wearable sensors data. I sincerely thank the concern persons involved in the project [1] for provided me the data to do my assignment.
+
+Certainly these data will have some correlations and interrelationships among themselves. But most of the data are NA and zero. We can neglect this as a noise. Otherwise our Model may overfit that too. 
+
+Steps to develope a Model:
+
+1. Set the working directory and load the workspace (As some functions are time intensive, it is good to save the sucessful workspace and load it whenever required).
+
+2. Loading the necessary library packages like caret, kernlab etc.,
+
+3. Load The training data which is provided as a .csv file
+
+4. As this training data is too vast, we can take the particular portion of it. 
+
+5. Then the un necessary attributes (ie., which have zero dependancy among other attributes) shall be removed. 
+
+6. Then the Model will be developed using Random Forest method.
+
+7. The predicted final model will be tested on the testing data.
+
+8. It is observed the random forest based model working with 100% accuracy for the given testing data.
+
+
+```{r}
+# setting working directory
+setwd("E:/Course-era-Machine-Learning/prac-ML")
+# loading the workspace
+load("E:\\Course-era-Machine-Learning\\prac-ML\\.RData")
+# loading necessary packages
+library(caret);library(kernlab);
+library(lattice)
+library(ggplot2)
+
+# load data
+trainRawData <- read.csv("pml-training.csv",na.strings=c("NA",""))
+# removing NAs
+NAs <- apply(trainRawData,2,function(x) {sum(is.na(x))}) 
+validData <- trainRawData[,which(NAs == 0)]
+# make training set
+trainIndex <- createDataPartition(y = validData$classe, p=0.2,list=FALSE) # to avoid time consuming computation 
+trainData <- validData[trainIndex,]
+# removing un necessary attributes 
+removeIndex <- grep("timestamp|X|user_name|new_window",names(trainData))
+trainData <- trainData[,-removeIndex] # training data to create a model
+#modFit <- train(trainData$classe ~.,data = trainData,method="rf") # i commented as this is time intensive, but i loaded the workspace image in the beginning
+modFit
+finMod<-modFit$finalModel
+predictions<-predict(modFit,newdata=testing)
+predictions
+ 
+```
+
+The out of sample error is the amount of error that the produced Model is generating for the test set on which it was not trained already. Hence the name out of sample error.
+
+It is calculated as the difference between the actual value and the predicted value.
+
+It is observed that the random forest based model is free of out of sample errors.
+
+The solution is given below:
+ 
+```{r}
+1-(sum(predictions==testing$classe)/86)
+ 
+```
+Here 86 is the size of the test data 
+
+In the project [1] a testing.csv data file is given.
+Let us load that file into r environment.
+```{r}
+tes<-read.csv("pml-testing.csv")
+```
+Let us call this prediction as predictions2
+```{r}
+predictions2<-predict(modFit,newdata=tes)
+```
+
+The following are the classe predictions of the given testing data.
+```{r}
+predictions
+```
+
+These are the predicted values for which the original (actual) output is not given in the file. But when i submit the answers i got 20/20. So i guess my model is working fine. 
+
+Summary:
+
+The Model has been developed using the random forest method. The model is validated by the out of sample testing. The model is also verified with the given testing set for which the actual output is not given in the file. 
+
+References: 
+[1] http://groupware.les.inf.puc-rio.br/har
